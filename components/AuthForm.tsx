@@ -75,7 +75,9 @@ const formSchema = authFormSchema(type);
 
           if(response) router.push('/')
          }
-      } catch (error) {
+    } catch (error) {
+      if (error instanceof Error)
+        form.setError("root", { message: error.message });
       console.log(error);
       } finally {
       setisLoading(false);

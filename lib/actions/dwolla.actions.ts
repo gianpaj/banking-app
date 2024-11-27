@@ -57,9 +57,29 @@ export const createDwollaCustomer = async (
   try {
     return await dwollaClient
       .post("customers", newCustomer)
-      .then((res) => res.headers.get("location"));
+      .then((res) => res.headers.get("location"))
+      .catch((err) => {
+        const errorObj = err.body;
+        // console.dir(typeof err);
+        // console.dir(typeof err.body);
+        // console.dir(JSON.stringify(err));
+        throw new DwollaError(
+          errorObj.message,
+          errorObj.code,
+          errorObj._embedded
+        );
+      });
   } catch (err) {
     console.error("Creating a Dwolla Customer Failed: ", err);
+    if (err instanceof DwollaError) {
+      if (err.code === "ValidationError") {
+        const firstError = err._embedded.errors[0];
+        throw new Error(firstError.message);
+      } else {
+        throw new Error(err.message);
+      }
+    }
+    throw err;
   }
 };
 
@@ -112,3 +132,23 @@ export const addFundingSource = async ({
     console.error("Transfer fund failed: ", err);
   }
 };
+
+class DwollaError extends Error {
+  constructor(message: string, code: string, _embedded: any) {
+    super(message);
+    this.code = code;
+    this.message = message;
+    this._embedded = _embedded;
+  }
+
+  code: string;
+  message: string;
+  _embedded: {
+    errors: {
+      code: string;
+      message: string;
+      path: string;
+      _links: any;
+    }[];
+  };
+}
