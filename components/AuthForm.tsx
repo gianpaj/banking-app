@@ -76,10 +76,13 @@ const formSchema = authFormSchema(type);
           if(response) router.push('/')
          }
     } catch (error) {
-      if (error instanceof Error)
-        form.setError("root", { message: error.message });
+      let message = 'Sorry, something went wrong';
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      form.setError('root', { message });
       console.log(error);
-      } finally {
+    } finally {
       setisLoading(false);
     }
   }
